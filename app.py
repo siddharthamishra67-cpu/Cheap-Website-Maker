@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize the classic Gemini client securely with your key layout
+# Initialize the Gemini client securely
 API_KEY = os.environ.get("GEMINI_API_KEY")
 if API_KEY:
     genai.configure(api_key=API_KEY)
@@ -71,7 +71,7 @@ left_col, right_col = st.columns([1.2, 1])
 with left_col:
     # Header & Hero Area
     st.markdown('<div class="main-title">🚀 Need a Professional Website?</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">Get your business online with a stunning, high-speed landing page.</div>', unsafe_allowed_html=True)
+    st.markdown('<div class="sub-title">Get your business online with a stunning, high-speed landing page.</div>', unsafe_allow_html=True)
     st.markdown('<div class="price-tag">💰 Special Offer: Full Website Under ₹2,000 Only!</div>', unsafe_allow_html=True)
     
     # Features List
@@ -102,7 +102,6 @@ with left_col:
     st.subheader("📩 Get a Free Consultation Call")
     st.caption("Fill out this form to send your details directly to our team.")
     
-    # Using clean HTML submission to handle data collection effortlessly
     form_html = """
     <form action="https://formsubmit.co" method="POST" class="form-container">
         <input type="hidden" name="_next" value="https://streamlit.io">
@@ -193,7 +192,6 @@ with right_col:
                         "Keep your responses concise, sharp, and easy to read."
                     )
                     
-                    # Call the classic model which fully authorizes your unique key token string
                     model = genai.GenerativeModel(
                         model_name="gemini-1.5-flash",
                         system_instruction=system_prompt
