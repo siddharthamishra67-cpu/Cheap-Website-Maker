@@ -76,7 +76,6 @@ with left_col:
         st.markdown("✅ **Lightning Fast Page Speeds**")
     with f_col2:
         st.markdown("✅ **Google Maps & Contact Forms**")
-
         st.markdown("✅ **Social Media Link Setup**")
         st.markdown("✅ **Free Lifetime Technical Support**")
         
@@ -176,7 +175,6 @@ with right_col:
 
         query = user_input.lower()
         with st.chat_message("assistant"):
-            # Highly descriptive, localized keyword routing map layout
             if "price" in query or "cost" in query or "how much" in query or "rate" in query or "rupee" in query or "₹" in query:
                 reply = "Our premium business website package is strictly under **₹2,000** completely! This includes a modern user interface design, mobile responsiveness, and lifetime free basic support. No hidden maintenance charges."
             elif "time" in query or "day" in query or "when" in query or "long" in query or "duration" in query:
