@@ -1,18 +1,11 @@
 import streamlit as st
-import google.generativeai as genai
-import os
 
-# Configure the landing page
+# Configure the landing page layout cleanly
 st.set_page_config(
     page_title="Affordable Website Maker", 
     page_icon="🌐", 
     layout="wide"
 )
-
-# Initialize the Gemini client securely
-API_KEY = os.environ.get("GEMINI_API_KEY")
-if API_KEY:
-    genai.configure(api_key=API_KEY)
 
 # Custom styling for a professional tech agency look
 st.markdown("""
@@ -65,7 +58,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Main layout split into Left (Content & Forms) and Right (AI Sales Chatbot)
+# Main layout split into Left (Content & Forms) and Right (AI Sales Assistant)
 left_col, right_col = st.columns([1.2, 1])
 
 with left_col:
@@ -160,49 +153,41 @@ with left_col:
     )
 
 with right_col:
-    st.subheader("💬 Ask Our AI Assistant")
-    st.caption("Get immediate answers about pricing, timelines, features, and technical details.")
+    st.subheader("💬 Chat with Our Sales Assistant")
+    st.caption("Get immediate answers about pricing, timelines, features, and project booking instructions.")
     
-    # Setup AI Chat History
+    # Initialize stable local chat records
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {"role": "assistant", "content": "Hello! I am your AI assistant. Want to get a stunning website for your business at just ₹2,000? Ask me anything about our services!"}
+            {"role": "assistant", "content": "Hello! I am your automated agency representative. Want to get a professional business website launched at just ₹2,000? Tell me what kind of site you need!"}
         ]
 
-    # Show existing chat history
+    # Render layout dialogue logs
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Handle New Chat Input
-    if user_input := st.chat_input("Ask about our website services..."):
+    # Process localized dialog query replies securely
+    if user_input := st.chat_input("Ask about pricing, timeline, booking..."):
         with st.chat_message("user"):
             st.markdown(user_input)
         st.session_state.messages.append({"role": "user", "content": user_input})
 
+        query = user_input.lower()
         with st.chat_message("assistant"):
-            placeholder = st.empty()
-            if API_KEY:
-                try:
-                    system_prompt = (
-                        "You are an expert sales representative for an affordable web design agency. "
-                        "The agency builds high-quality, professional, mobile-friendly landing pages and business websites for under 2,000 Indian Rupees (₹2,000). "
-                        "Always be extremely professional, polite, helpful, and focused on convincing the client to order a website. "
-                        "If the customer wants to book a project, tell them to call the direct official phone number: 9532991633 or fill out the form on the left. "
-                        "Keep your responses concise, sharp, and easy to read."
-                    )
-                    
-                    model = genai.GenerativeModel(
-                        model_name="gemini-1.5-flash",
-                        system_instruction=system_prompt
-                    )
-                    response = model.generate_content(user_input)
-                    ai_reply = response.text
-                    placeholder.markdown(ai_reply)
-                    st.session_state.messages.append({"role": "assistant", "content": ai_reply})
-                except Exception as e:
-                    placeholder.error(f"Connection issue: {e}")
+            # Highly descriptive, localized keyword routing map layout
+            if "price" in query or "cost" in query or "how much" in query or "rate" in query or "rupee" in query or "₹" in query:
+                reply = "Our premium business website package is strictly under **₹2,000** completely! This includes a modern user interface design, mobile responsiveness, and lifetime free basic support. No hidden maintenance charges."
+            elif "time" in query or "day" in query or "when" in query or "long" in query or "duration" in query:
+                reply = "We complete and publish your business website within **3 to 5 business days** once you send us your layout text details and pictures!"
+            elif "book" in query or "order" in query or "buy" in query or "start" in query or "contact" in query:
+                reply = "Fantastic! To book your website right away, please **fill out the lead consultation form on the left** with your name and phone number, or call our team directly at **+91 9532991633**. We will contact you instantly!"
+            elif "e-commerce" in query or "shop" in query or "store" in query or "sell" in query:
+                reply = "Yes, we specialize in building clean, high-speed **E-commerce Stores**! We can set up clear product showcase cards, smooth payment button redirections, and easy navigation pathways to help you sell items easily."
+            elif "mobile" in query or "phone" in query or "screen" in query or "responsive" in query:
+                reply = "Every single website we build is engineered to look beautiful and function perfectly on all smart devices, including Android phones, iPhones, tablets, iPads, and computer screens."
             else:
-                reply = "I'm ready to answer! Please make sure your GEMINI_API_KEY environment variable is configured to activate live cloud responses."
-                placeholder.markdown(reply)
-                st.session_state.messages.append({"role": "assistant", "content": reply})
+                reply = "I would love to help you get your business online for just **₹2,000**! We provide custom landing pages, portfolios, and e-commerce setups with free tech support. To discuss your precise requirements or book a project, please fill out the intake form on the left or call us directly at **+91 9532991633**!"
+                
+            st.markdown(reply)
+            st.session_state.messages.append({"role": "assistant", "content": reply})
