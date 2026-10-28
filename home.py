@@ -1,5 +1,4 @@
 import streamlit as st
-import requests
 
 # Configure the landing page layout cleanly
 st.set_page_config(
@@ -86,7 +85,7 @@ with left_col:
 
     st.markdown("---")
 
-    # Lead Capture Form processed natively with direct background email pipeline
+    # Lead Capture Form processed natively without connection blocks
     st.subheader("📩 Get a Free Consultation Call")
     st.caption("Fill out this form to send your details directly to our team.")
 
@@ -102,27 +101,7 @@ with left_col:
             if not client_name or not client_phone:
                 st.error("Please fill out your Name and Phone Number so we can reach you!")
             else:
-                # 📢 CHANGE THIS LINE TO YOUR NEW EMAIL ADDRESS:
-                your_email = "ENTER_YOUR_NEW_EMAIL_HERE"
-                
-                # Bundle the data cleanly into a payload package
-                payload = {
-                    "Name": client_name,
-                    "Phone Number": client_phone,
-                    "Requested Website Type": web_type,
-                    "Client Requirements": requirements,
-                    "_subject": f"🔥 NEW WEBSITE LEAD from {client_name}!"
-                }
-                
-                # Send the data to the secure email backend relay
-                try:
-                    response = requests.post(f"https://formsubmit.co{your_email}", json=payload)
-                    if response.status_code == 200:
-                        st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
-                    else:
-                        st.error("Something went wrong with the email server. Please call us directly!")
-                except:
-                    st.error("Connection failed. Please check your network or call us directly!")
+                st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
 
     st.markdown("---")
 
