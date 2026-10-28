@@ -76,6 +76,7 @@ with left_col:
         st.markdown("✅ **Lightning Fast Page Speeds**")
     with f_col2:
         st.markdown("✅ **Google Maps & Contact Forms**")
+
         st.markdown("✅ **Social Media Link Setup**")
         st.markdown("✅ **Free Lifetime Technical Support**")
         
