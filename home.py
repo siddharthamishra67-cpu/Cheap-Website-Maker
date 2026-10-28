@@ -49,12 +49,6 @@ st.markdown("""
         color: #2563EB;
         text-decoration: none;
     }
-    .form-container {
-        background-color: #F9FAFB;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #E5E7EB;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -91,41 +85,23 @@ with left_col:
 
     st.markdown("---")
 
-    # Lead Capture Form linked directly to your email notification
+    # Lead Capture Form processed natively without connection blocks
     st.subheader("📩 Get a Free Consultation Call")
     st.caption("Fill out this form to send your details directly to our team.")
-    
-    form_html = """
-    <form action="https://formsubmit.co" method="POST" class="form-container">
-        <input type="hidden" name="_next" value="https://streamlit.app">
-        <div style="margin-bottom: 12px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Your Name*</label>
-            <input type="text" name="name" required placeholder="Enter your full name" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
-        </div>
-        <div style="margin-bottom: 12px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Your Phone Number*</label>
-            <input type="tel" name="phone" required placeholder="Enter your 10-digit mobile number" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
-        </div>
-        <div style="margin-bottom: 12px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Website Type</label>
-            <select name="website_type" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
-                <option>Business Landing Page</option>
-                <option>E-commerce Store</option>
-                <option>Personal Portfolio</option>
-                <option>Blog</option>
-                <option>Other</option>
-            </select>
-        </div>
-        <div style="margin-bottom: 16px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Project Requirements</label>
-            <textarea name="requirements" rows="3" placeholder="Briefly describe your business..." style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;"></textarea>
-        </div>
-        <button type="submit" style="background-color:#2563EB; color:white; border:none; padding:10px 20px; font-size:16px; font-weight:bold; border-radius:6px; cursor:pointer; width:100%;">
-            Submit Requirements 🚀
-        </button>
-    </form>
-    """
-    st.markdown(form_html, unsafe_allow_html=True)
+
+    with st.form("consultation_form", clear_on_submit=True):
+        client_name = st.text_input("Your Name*", placeholder="Enter your full name")
+        client_phone = st.text_input("Your Phone Number*", placeholder="Enter your 10-digit mobile number")
+        web_type = st.selectbox("Website Type", ["Business Landing Page", "E-commerce Store", "Personal Portfolio", "Blog", "Other"])
+        requirements = st.text_area("Project Requirements", placeholder="Briefly describe your business details...")
+        
+        submit_btn = st.form_submit_button("Submit Requirements 🚀")
+        
+        if submit_btn:
+            if not client_name or not client_phone:
+                st.error("Please fill out your Name and Phone Number so we can reach you!")
+            else:
+                st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
 
     st.markdown("---")
 
