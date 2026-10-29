@@ -104,23 +104,23 @@ with left_col:
                 st.error("Please fill out your Name and Phone Number so we can reach you!")
             else:
                 try:
-                    # Cleanly load credentials dictionary from Streamlit secrets
-                    secrets_dict = dict(st.secrets["connections"]["gsheets"])
+                    # Load secrets cleanly as a raw dictionary
+                    sec = dict(st.secrets["connections"]["gsheets"])
                     
                     # Fix broken newlines in the private key text string automatically
-                    if "private_key" in secrets_dict and isinstance(secrets_dict["private_key"], str):
-                        secrets_dict["private_key"] = secrets_dict["private_key"].replace("\\n", "\n")
+                    if "private_key" in sec and isinstance(sec["private_key"], str):
+                        sec["private_key"] = sec["private_key"].replace("\\n", "\n")
                     
-                    # Connect cleanly using single fields to explicitly avoid keyword arguments collision
+                    # Open connection by explicitly parsing parameters to bypass conflict errors
                     conn = st.connection(
-                        "gsheets", 
-                        type=GSheetsConnection, 
-                        spreadsheet=secrets_dict.get("spreadsheet"),
-                        project_id=secrets_dict.get("project_id"),
-                        private_key_id=secrets_dict.get("private_key_id"),
-                        private_key=secrets_dict.get("private_key"),
-                        client_email=secrets_dict.get("client_email"),
-                        client_id=secrets_dict.get("client_id")
+                        "gsheets",
+                        type=GSheetsConnection,
+                        spreadsheet=sec.get("spreadsheet"),
+                        project_id=sec.get("project_id"),
+                        private_key_id=sec.get("private_key_id"),
+                        private_key=sec.get("private_key"),
+                        client_email=sec.get("client_email"),
+                        client_id=sec.get("client_id")
                     )
                     
                     # Read existing spreadsheet records securely
@@ -137,7 +137,7 @@ with left_col:
                         "Requirements": requirements
                     }])
                     
-                    # Combine existing spreadsheet data rows with the new entry
+                    # Combine records
                     updated_df = pd.concat([existing_data, new_lead], ignore_index=True)
                     
                     # Commit and write data back to Google Sheets columns directly
