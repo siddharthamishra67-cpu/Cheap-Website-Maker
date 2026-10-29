@@ -1,4 +1,6 @@
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
+import pandas as pd
 
 # Configure the landing page layout cleanly
 st.set_page_config(
@@ -85,7 +87,7 @@ with left_col:
 
     st.markdown("---")
 
-    # Lead Capture Form processed natively without connection blocks
+    # Lead Capture Form processed natively with active database integration
     st.subheader("📩 Get a Free Consultation Call")
     st.caption("Fill out this form to send your details directly to our team.")
 
@@ -102,18 +104,31 @@ with left_col:
                 st.error("Please fill out your Name and Phone Number so we can reach you!")
             else:
                 try:
-                    import gspread
-                    import requests
+                    # Formulate connection configuration tracking database variables safely
+                    conn = st.connection("gsheets", type=GSheetsConnection)
                     
-                    # Cleanly authorize the session for a public web request link
-                    gc = gspread.Client(auth=None, session=requests.Session())
-                    sheet = gc.open_by_url(st.secrets["spreadsheet_url"]).sheet1
+                    # Read original state logs securely if sheet exists, otherwise start clean
+                    try:
+                        existing_data = conn.read(worksheet="Sheet1", ttl=0)
+                    except Exception:
+                        existing_data = pd.DataFrame(columns=["Name", "Phone", "Type", "Requirements"])
                     
-                    # Append the form entries into the spreadsheet columns
-                    sheet.append_row([client_name, client_phone, web_type, requirements])
+                    # Create data row log
+                    new_lead = pd.DataFrame([{
+                        "Name": client_name,
+                        "Phone": client_phone,
+                        "Type": web_type,
+                        "Requirements": requirements
+                    }])
+                    
+                    # Combine structure elements arrays
+                    updated_df = pd.concat([existing_data, new_lead], ignore_index=True)
+                    
+                    # Write dataset framework into Google Cloud endpoints
+                    conn.update(worksheet="Sheet1", data=updated_df)
                     st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
                 except Exception as e:
-                    st.error(f"Failed to log message: {e}. Please ensure the sheet sharing is set to 'Anyone with the link can Edit'.")
+                    st.error(f"Error saving data: {e}")
 
     st.markdown("---")
 
