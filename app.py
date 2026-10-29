@@ -111,8 +111,17 @@ with left_col:
                     if "private_key" in secrets_dict and isinstance(secrets_dict["private_key"], str):
                         secrets_dict["private_key"] = secrets_dict["private_key"].replace("\\n", "\n")
                     
-                    # Connect to your Google Sheet using fixed credentials
-                    conn = st.connection("gsheets", type=GSheetsConnection, **secrets_dict)
+                    # Connect cleanly using single fields to explicitly avoid keyword arguments collision
+                    conn = st.connection(
+                        "gsheets", 
+                        type=GSheetsConnection, 
+                        spreadsheet=secrets_dict.get("spreadsheet"),
+                        project_id=secrets_dict.get("project_id"),
+                        private_key_id=secrets_dict.get("private_key_id"),
+                        private_key=secrets_dict.get("private_key"),
+                        client_email=secrets_dict.get("client_email"),
+                        client_id=secrets_dict.get("client_id")
+                    )
                     
                     # Read existing spreadsheet records securely
                     try:
@@ -194,4 +203,3 @@ with right_col:
             elif "e-commerce" in query or "shop" in query or "store" in query or "sell" in query:
                 reply = "Yes, we specialize in building clean, high-speed **E-commerce Stores**! We can set up clear product showcase cards, smooth payment button redirections, and easy navigation pathways to help you sell items easily."
             elif "mobile" in query or "phone" in query or "screen" in query or "responsive" in query:
-                reply = "Every single website we build is engineered to look beautiful and function perfectly on all smart devices, including Android phones, iPhones, tablets, iPads, and computer screens."
