@@ -103,8 +103,10 @@ with left_col:
             else:
                 try:
                     import gspread
-                    # Connect to your public sheet link from secrets securely
-                    gc = gspread.public()
+                    import requests
+                    
+                    # Cleanly authorize the session for a public web request link
+                    gc = gspread.Client(auth=None, session=requests.Session())
                     sheet = gc.open_by_url(st.secrets["spreadsheet_url"]).sheet1
                     
                     # Append the form entries into the spreadsheet columns
