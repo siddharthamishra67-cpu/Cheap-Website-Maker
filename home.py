@@ -67,25 +67,30 @@ st.markdown(
 PHONE_NUMBER = "+919532991633"
 COLUMNS = ["Name", "Phone", "Type", "Requirements"]
 
+SPREADSHEET_URL = (
+    "https://docs.google.com/spreadsheets/d/"
+    "1gBxO-Y-57yL-gC26cckx9EJZ7gACMV6BV_37KEWgSqo/edit"
+)
 
 # ---------------- GOOGLE SHEETS CONNECTION ----------------
 @st.cache_resource
 def get_connection():
-    return st.connection("gsheets", type=GSheetsConnection)
+    return st.connection(
+        "gsheets",
+        type=GSheetsConnection,
+        spreadsheet=SPREADSHEET_URL,
+    )
 
 
 def save_lead(name, phone, website_type, requirements):
     """Append one lead without replacing existing spreadsheet records."""
-
     conn = get_connection()
 
-    # Do not overwrite the sheet if reading existing data fails.
     existing = conn.read(worksheet="Sheet1", ttl=0)
 
     if existing is None:
         existing = pd.DataFrame(columns=COLUMNS)
 
-    # Ensure the expected columns exist.
     for column in COLUMNS:
         if column not in existing.columns:
             existing[column] = ""
@@ -103,7 +108,6 @@ def save_lead(name, phone, website_type, requirements):
     )
 
     updated = pd.concat([existing, new_lead], ignore_index=True)
-
     conn.update(worksheet="Sheet1", data=updated)
 
 
@@ -111,8 +115,6 @@ def save_lead(name, phone, website_type, requirements):
 left_col, right_col = st.columns([1.2, 1])
 
 with left_col:
-
-    # Hero section
     st.markdown(
         '<div class="main-title">🚀 Need a Professional Website?</div>',
         unsafe_allow_html=True,
@@ -131,9 +133,7 @@ with left_col:
         unsafe_allow_html=True,
     )
 
-    # Features
     st.subheader("🛠️ What We Offer:")
-
     f1, f2 = st.columns(2)
 
     with f1:
@@ -147,10 +147,7 @@ with left_col:
         st.markdown("✅ **Basic technical support**")
 
     st.divider()
-
-    # Portfolio
     st.subheader("📁 Our Design Samples")
-
     p1, p2 = st.columns(2)
 
     with p1:
@@ -173,13 +170,10 @@ with left_col:
     )
 
     st.divider()
-
-    # Lead capture form
     st.subheader("📩 Get a Free Consultation")
     st.caption("Fill in the form to send your project requirements.")
 
     with st.form("consultation_form", clear_on_submit=True):
-
         client_name = st.text_input(
             "Your Name *",
             placeholder="Enter your full name",
@@ -219,11 +213,13 @@ with left_col:
         )
 
         if submitted:
-
             clean_name = client_name.strip()
-            clean_phone = re.sub(r"[\s\-()]", "", client_phone.strip())
+            clean_phone = re.sub(
+                r"[\s\-()]",
+                "",
+                client_phone.strip(),
+            )
 
-            # Validate an Indian mobile number.
             if clean_phone.startswith("+91"):
                 clean_phone = clean_phone[3:]
             elif clean_phone.startswith("91") and len(clean_phone) == 12:
@@ -261,17 +257,13 @@ with left_col:
                     )
 
                 except Exception:
-                    # Log technical details privately on the server.
                     logger.exception("Unable to save website enquiry.")
-
                     st.error(
                         "We could not save your enquiry right now. "
                         "Please try again later or contact us by phone."
                     )
 
     st.divider()
-
-    # FAQ
     st.subheader("🤔 Frequently Asked Questions")
 
     with st.expander("⏱️ How long does a website take?"):
@@ -295,7 +287,6 @@ with left_col:
             "and the agreed project scope."
         )
 
-    # Contact
     st.markdown(
         f"""
         <div class="cta-box">
@@ -312,9 +303,7 @@ with left_col:
 
 # ---------------- SALES CHAT ASSISTANT ----------------
 with right_col:
-
     st.subheader("💬 Chat with Our Sales Assistant")
-
     st.caption(
         "Ask about pricing, features, timelines, or how to book."
     )
@@ -331,12 +320,10 @@ with right_col:
             }
         ]
 
-    # Display existing conversation.
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
             st.markdown(msg["content"])
 
-    # Process new question.
     user_input = st.chat_input(
         "Ask about price, features, or booking..."
     )
@@ -348,7 +335,6 @@ with right_col:
 
         query = user_input.lower()
 
-        # Keyword-based responses; this is not an AI language model.
         if any(word in query for word in [
             "price", "cost", "how much", "rate", "rupee", "₹", "budget"
         ]):
@@ -431,6 +417,4 @@ with right_col:
         st.session_state.messages.append(
             {"role": "assistant", "content": reply}
         )
-
-        # Rerun to display both messages in the conversation.
         st.rerun()
