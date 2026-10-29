@@ -104,16 +104,23 @@ with left_col:
                 st.error("Please fill out your Name and Phone Number so we can reach you!")
             else:
                 try:
-                    # Formulate connection configuration tracking database variables safely
-                    conn = st.connection("gsheets", type=GSheetsConnection)
+                    # Cleanly load credentials dictionary from Streamlit secrets
+                    secrets_dict = dict(st.secrets["connections"]["gsheets"])
                     
-                    # Read original state logs securely if sheet exists, otherwise start clean
+                    # Fix broken newlines in the private key text string automatically
+                    if "private_key" in secrets_dict and isinstance(secrets_dict["private_key"], str):
+                        secrets_dict["private_key"] = secrets_dict["private_key"].replace("\\n", "\n")
+                    
+                    # Connect to your Google Sheet using fixed credentials
+                    conn = st.connection("gsheets", type=GSheetsConnection, **secrets_dict)
+                    
+                    # Read existing spreadsheet records securely
                     try:
                         existing_data = conn.read(worksheet="Sheet1", ttl=0)
                     except Exception:
                         existing_data = pd.DataFrame(columns=["Name", "Phone", "Type", "Requirements"])
                     
-                    # Create data row log
+                    # Create new row mapping user input data
                     new_lead = pd.DataFrame([{
                         "Name": client_name,
                         "Phone": client_phone,
@@ -121,10 +128,10 @@ with left_col:
                         "Requirements": requirements
                     }])
                     
-                    # Combine structure elements arrays
+                    # Combine existing spreadsheet data rows with the new entry
                     updated_df = pd.concat([existing_data, new_lead], ignore_index=True)
                     
-                    # Write dataset framework into Google Cloud endpoints
+                    # Commit and write data back to Google Sheets columns directly
                     conn.update(worksheet="Sheet1", data=updated_df)
                     st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
                 except Exception as e:
@@ -189,7 +196,3 @@ with right_col:
             elif "mobile" in query or "phone" in query or "screen" in query or "responsive" in query:
                 reply = "Every single website we build is engineered to look beautiful and function perfectly on all smart devices, including Android phones, iPhones, tablets, iPads, and computer screens."
             else:
-                reply = "I would love to help you get your business online for just **₹2,000**! We provide custom landing pages, portfolios, and e-commerce setups with free tech support. To discuss your precise requirements or book a project, please fill out the intake form on the left or call us directly at **+91 9532991633**!"
-                
-            st.markdown(reply)
-            st.session_state.messages.append({"role": "assistant", "content": reply})
