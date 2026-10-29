@@ -101,7 +101,17 @@ with left_col:
             if not client_name or not client_phone:
                 st.error("Please fill out your Name and Phone Number so we can reach you!")
             else:
-                st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
+                try:
+                    import gspread
+                    # Connect to your public sheet link from secrets securely
+                    gc = gspread.public()
+                    sheet = gc.open_by_url(st.secrets["spreadsheet_url"]).sheet1
+                    
+                    # Append the form entries into the spreadsheet columns
+                    sheet.append_row([client_name, client_phone, web_type, requirements])
+                    st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
+                except Exception as e:
+                    st.error(f"Failed to log message: {e}. Please ensure the sheet sharing is set to 'Anyone with the link can Edit'.")
 
     st.markdown("---")
 
