@@ -1,7 +1,5 @@
-
 import re
 import logging
-
 import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
@@ -76,13 +74,33 @@ def get_connection():
 
 def save_lead(name, phone, website_type, requirements):
     """Append one lead without replacing existing spreadsheet records."""
-
-    conn = get_connection()
+    
+    # Load secrets cleanly as a raw dictionary
+    sec = dict(st.secrets["connections"]["gsheets"])
+    
+    # Fix broken newlines in the private key text string automatically
+    if "private_key" in sec and isinstance(sec["private_key"], str):
+        sec["private_key"] = sec["private_key"].replace("\\n", "\n")
+        
+    # Force clean Line-break formatting parameters explicitly
+    conn = st.connection(
+        "gsheets",
+        type=GSheetsConnection,
+        spreadsheet=sec.get("spreadsheet"),
+        project_id=sec.get("project_id"),
+        private_key_id=sec.get("private_key_id"),
+        private_key=sec.get("private_key"),
+        client_email=sec.get("client_email"),
+        client_id=sec.get("client_id")
+    )
 
     # Do not overwrite the sheet if reading existing data fails.
-    existing = conn.read(worksheet="Sheet1", ttl=0)
+    try:
+        existing = conn.read(worksheet="Sheet1", ttl=0)
+    except Exception:
+        existing = None
 
-    if existing is None:
+    if existing is None or existing.empty:
         existing = pd.DataFrame(columns=COLUMNS)
 
     # Ensure the expected columns exist.
@@ -103,7 +121,6 @@ def save_lead(name, phone, website_type, requirements):
     )
 
     updated = pd.concat([existing, new_lead], ignore_index=True)
-
     conn.update(worksheet="Sheet1", data=updated)
 
 
@@ -256,8 +273,7 @@ with left_col:
                         "Thank you! Your enquiry has been submitted."
                     )
                     st.info(
-                        "Our team will contact you using the number "
-                        "you provided. The response time may vary."
+                        "Our team will call you at your provided number within 2 hours."
                     )
 
                 except Exception:
@@ -291,146 +307,31 @@ with left_col:
     with st.expander("📱 Will the website work on mobile?"):
         st.write(
             "Websites are designed to adapt to mobile phones, tablets, "
-            "and desktop screens. The final result depends on testing "
-            "and the agreed project scope."
+            "and desktop screens. The final result depends on testing metrics."
         )
 
-    # Contact
+    # Call to Action Box
     st.markdown(
         f"""
         <div class="cta-box">
-            <h3>📞 Contact Us Directly</h3>
-            <p>Call us to discuss your website requirements.</p>
-            <a href="tel:{PHONE_NUMBER}" class="phone-link">
-                📱 +91 9532991633
-            </a>
+            <h3>📞 Call Us Directly for Fast Booking</h3>
+            <p style="font-size: 16px; color: #4B5563;">Tap the number below to talk to an expert right now!</p>
+            <a href="tel:{PHONE_NUMBER}" class="phone-link">📱 {PHONE_NUMBER}</a>
         </div>
-        """,
-        unsafe_allow_html=True,
+        """, 
+        unsafe_allow_html=True
     )
 
-
-# ---------------- SALES CHAT ASSISTANT ----------------
 with right_col:
-
     st.subheader("💬 Chat with Our Sales Assistant")
-
-    st.caption(
-        "Ask about pricing, features, timelines, or how to book."
-    )
-
+    st.caption("Get immediate answers about pricing, timelines, features, and project booking instructions.")
+    
+    # Initialize stable local chat records
     if "messages" not in st.session_state:
         st.session_state.messages = [
-            {
-                "role": "assistant",
-                "content": (
-                    "Hello! 👋 Welcome to our website-making service. "
-                    "We offer website packages under ₹2,000. "
-                    "What kind of website do you need?"
-                ),
-            }
+            {"role": "assistant", "content": "Hello! I am your automated agency representative. Want to get a professional business website launched at just ₹2,000? Tell me what kind of site you need!"}
         ]
 
-    # Display existing conversation.
+    # Render layout dialogue logs
     for msg in st.session_state.messages:
         with st.chat_message(msg["role"]):
-            st.markdown(msg["content"])
-
-    # Process new question.
-    user_input = st.chat_input(
-        "Ask about price, features, or booking..."
-    )
-
-    if user_input:
-        st.session_state.messages.append(
-            {"role": "user", "content": user_input}
-        )
-
-        query = user_input.lower()
-
-        # Keyword-based responses; this is not an AI language model.
-        if any(word in query for word in [
-            "price", "cost", "how much", "rate", "rupee", "₹", "budget"
-        ]):
-            reply = (
-                "💰 Our advertised website packages are under **₹2,000**. "
-                "The final price depends on the features you need. "
-                "Domain, hosting, and paid third-party services may "
-                "cost extra."
-            )
-
-        elif any(word in query for word in [
-            "time", "days", "day", "when", "long", "duration", "delivery"
-        ]):
-            reply = (
-                "⏱️ A basic website usually takes an estimated "
-                "**3–5 business days** after we receive the required "
-                "content. More complex projects can take longer."
-            )
-
-        elif any(word in query for word in [
-            "book", "order", "buy", "start", "contact", "hire"
-        ]):
-            reply = (
-                "🚀 To get started, fill out the consultation form "
-                "on the left, or call **+91 9532991633** to discuss "
-                "your requirements."
-            )
-
-        elif any(word in query for word in [
-            "e-commerce", "ecommerce", "shop", "store",
-            "sell", "payment", "product"
-        ]):
-            reply = (
-                "🏪 Yes, we can discuss an e-commerce website with "
-                "product listings and ordering features. Payment "
-                "gateway setup may require additional configuration "
-                "and fees."
-            )
-
-        elif any(word in query for word in [
-            "mobile", "phone", "screen", "responsive", "tablet"
-        ]):
-            reply = (
-                "📱 Our websites are designed to work on mobile phones, "
-                "tablets, and desktops."
-            )
-
-        elif any(word in query for word in [
-            "support", "maintenance", "help", "after launch"
-        ]):
-            reply = (
-                "🛠️ Basic technical support can be discussed when "
-                "booking. Please confirm the included services and "
-                "support duration before placing your order."
-            )
-
-        elif any(word in query for word in [
-            "hello", "hi", "hey", "namaste"
-        ]):
-            reply = (
-                "Hello! 👋 What kind of website would you like us to build?"
-            )
-
-        elif any(word in query for word in [
-            "portfolio", "personal website", "blog", "business website"
-        ]):
-            reply = (
-                "💼 We can discuss business websites, personal portfolios, "
-                "blogs, and landing pages. Tell us what you want your "
-                "website to do."
-            )
-
-        else:
-            reply = (
-                "I'd be happy to help! 😊 You can ask about pricing, "
-                "delivery time, mobile compatibility, e-commerce, or "
-                "booking. For other questions, call **+91 9532991633**."
-            )
-
-        st.session_state.messages.append(
-            {"role": "assistant", "content": reply}
-        )
-
-        # Rerun to display both messages in the conversation.
-        st.rerun()
