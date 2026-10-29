@@ -1,4 +1,6 @@
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
+import pandas as pd
 
 # Configure the landing page layout cleanly
 st.set_page_config(
@@ -49,12 +51,6 @@ st.markdown("""
         color: #2563EB;
         text-decoration: none;
     }
-    .form-container {
-        background-color: #F9FAFB;
-        padding: 20px;
-        border-radius: 8px;
-        border: 1px solid #E5E7EB;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -91,41 +87,55 @@ with left_col:
 
     st.markdown("---")
 
-    # Lead Capture Form linked directly to your email notification
+    # Lead Capture Form processed natively with active database integration
     st.subheader("📩 Get a Free Consultation Call")
     st.caption("Fill out this form to send your details directly to our team.")
-    
-    form_html = """
-    <form action="https://formsubmit.co" method="POST" class="form-container">
-        <input type="hidden" name="_next" value="https://streamlit.io">
-        <div style="margin-bottom: 12px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Your Name*</label>
-            <input type="text" name="name" required placeholder="Enter your full name" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
-        </div>
-        <div style="margin-bottom: 12px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Your Phone Number*</label>
-            <input type="tel" name="phone" required placeholder="Enter your 10-digit mobile number" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
-        </div>
-        <div style="margin-bottom: 12px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Website Type</label>
-            <select name="website_type" style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;">
-                <option>Business Landing Page</option>
-                <option>E-commerce Store</option>
-                <option>Personal Portfolio</option>
-                <option>Blog</option>
-                <option>Other</option>
-            </select>
-        </div>
-        <div style="margin-bottom: 16px;">
-            <label style="font-weight:bold; display:block; margin-bottom:5px;">Project Requirements</label>
-            <textarea name="requirements" rows="3" placeholder="Briefly describe your business..." style="width:100%; padding:8px; border-radius:4px; border:1px solid #ccc;"></textarea>
-        </div>
-        <button type="submit" style="background-color:#2563EB; color:white; border:none; padding:10px 20px; font-size:16px; font-weight:bold; border-radius:6px; cursor:pointer; width:100%;">
-            Submit Requirements 🚀
-        </button>
-    </form>
-    """
-    st.markdown(form_html, unsafe_allow_html=True)
+
+    with st.form("consultation_form", clear_on_submit=True):
+        client_name = st.text_input("Your Name*", placeholder="Enter your full name")
+        client_phone = st.text_input("Your Phone Number*", placeholder="Enter your 10-digit mobile number")
+        web_type = st.selectbox("Website Type", ["Business Landing Page", "E-commerce Store", "Personal Portfolio", "Blog", "Other"])
+        requirements = st.text_area("Project Requirements", placeholder="Briefly describe your business details...")
+        
+        submit_btn = st.form_submit_button("Submit Requirements 🚀")
+        
+        if submit_btn:
+            if not client_name or not client_phone:
+                st.error("Please fill out your Name and Phone Number so we can reach you!")
+            else:
+                try:
+                    # Cleanly load credentials dictionary from Streamlit secrets
+                    secrets_dict = dict(st.secrets["connections"]["gsheets"])
+                    
+                    # Fix broken newlines in the private key text string automatically
+                    if "private_key" in secrets_dict and isinstance(secrets_dict["private_key"], str):
+                        secrets_dict["private_key"] = secrets_dict["private_key"].replace("\\n", "\n")
+                    
+                    # Connect to your Google Sheet using fixed credentials
+                    conn = st.connection("gsheets", type=GSheetsConnection, **secrets_dict)
+                    
+                    # Read existing spreadsheet records securely
+                    try:
+                        existing_data = conn.read(worksheet="Sheet1", ttl=0)
+                    except Exception:
+                        existing_data = pd.DataFrame(columns=["Name", "Phone", "Type", "Requirements"])
+                    
+                    # Create new row mapping user input data
+                    new_lead = pd.DataFrame([{
+                        "Name": client_name,
+                        "Phone": client_phone,
+                        "Type": web_type,
+                        "Requirements": requirements
+                    }])
+                    
+                    # Combine existing spreadsheet data rows with the new entry
+                    updated_df = pd.concat([existing_data, new_lead], ignore_index=True)
+                    
+                    # Commit and write data back to Google Sheets columns directly
+                    conn.update(worksheet="Sheet1", data=updated_df)
+                    st.success(f"Thank you {client_name}! Your requirements have been logged safely. Our team will call you at {client_phone} within 2 hours.")
+                except Exception as e:
+                    st.error(f"Error saving data: {e}")
 
     st.markdown("---")
 
@@ -186,7 +196,3 @@ with right_col:
             elif "mobile" in query or "phone" in query or "screen" in query or "responsive" in query:
                 reply = "Every single website we build is engineered to look beautiful and function perfectly on all smart devices, including Android phones, iPhones, tablets, iPads, and computer screens."
             else:
-                reply = "I would love to help you get your business online for just **₹2,000**! We provide custom landing pages, portfolios, and e-commerce setups with free tech support. To discuss your precise requirements or book a project, please fill out the intake form on the left or call us directly at **+91 9532991633**!"
-                
-            st.markdown(reply)
-            st.session_state.messages.append({"role": "assistant", "content": reply})
