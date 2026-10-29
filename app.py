@@ -195,4 +195,3 @@ with right_col:
                 reply = "Yes, we specialize in building clean, high-speed **E-commerce Stores**! We can set up clear product showcase cards, smooth payment button redirections, and easy navigation pathways to help you sell items easily."
             elif "mobile" in query or "phone" in query or "screen" in query or "responsive" in query:
                 reply = "Every single website we build is engineered to look beautiful and function perfectly on all smart devices, including Android phones, iPhones, tablets, iPads, and computer screens."
-            else:
